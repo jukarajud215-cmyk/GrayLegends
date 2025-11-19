@@ -1,0 +1,33 @@
+{
+  "originHash" : "022f70d6fc4e554ef448520e83cd113b6608e4c6a82234be80311a0c5914f7f9",
+  "pins" : [
+    {
+      "identity" : "appsflyerframework",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/AppsFlyerSDK/AppsFlyerFramework",
+      "state" : {
+        "revision" : "43147aff398c1d9973f2f5dbe1193ad5d2e82d74",
+        "version" : "6.17.7"
+      }
+    },
+    {
+      "identity" : "flagsmith-ios-client",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Flagsmith/flagsmith-ios-client.git",
+      "state" : {
+        "revision" : "786d4aedb4075ad8e33c0b27808471c541fd7750",
+        "version" : "3.9.0"
+      }
+    },
+    {
+      "identity" : "onesignal-ios-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/OneSignal/OneSignal-iOS-SDK",
+      "state" : {
+        "revision" : "47972a48f0bf648706e3ec7f8f837d4b3756f69c",
+        "version" : "5.2.15"
+      }
+    }
+  ],
+  "version" : 3
+}
