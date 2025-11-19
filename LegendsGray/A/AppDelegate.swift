@@ -22,7 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-      //  ConsoleCapture.shared.startCapture()
+       ConsoleCapture.shared.startCapture()
         print("✅ [AppDelegate] didFinishLaunchingWithOptions старт")
         
         Flagsmith.shared.apiKey = "6VMAUtutyrub5sZK38pFAS"
