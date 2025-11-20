@@ -110,6 +110,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         OneSignal.initialize(AppConfig.oneSignalAppID, withLaunchOptions: launchOptions)
         OneSignal.Debug.setLogLevel(.LL_VERBOSE)
     }
+    
 }
 
 extension AppDelegate: AppsFlyerLibDelegate {
@@ -134,12 +135,13 @@ extension AppDelegate: AppsFlyerLibDelegate {
         AppsFlyerAttributionService.shared.handleDeepLink(result: result)
     }
     
-    // 🚨 ДОБАВЬ ВОТ ЭТИ ДВА МЕТОДА (Legacy):
-    // Если onDeepLinking не сработает, может сработать этот
+    
     func onAppOpenAttribution(_ attributionData: [AnyHashable : Any]) {
-        print("📡 [AppsFlyer] (Legacy) onAppOpenAttribution: \(attributionData)")
-        // Можно тоже попробовать обработать, но пока просто посмотрим лог
-    }
+            print("📡 [AppsFlyer] (Legacy) onAppOpenAttribution данные получены")
+            
+            // 🚨 ДОБАВЛЯЕМ ВЫЗОВ СЕРВИСА:
+            AppsFlyerAttributionService.shared.handleLegacyDeepLink(attributionData)
+        }
 
     func onAppOpenAttributionFailure(_ error: Error) {
         print("❌ [AppsFlyer] (Legacy) onAppOpenAttributionFailure: \(error.localizedDescription)")
@@ -176,4 +178,6 @@ extension AppDelegate {
         AppsFlyerLib.shared().handleOpen(url, options: options)
         return true
     }
+    
+    
 }

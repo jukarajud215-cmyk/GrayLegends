@@ -110,6 +110,19 @@ final class AppsFlyerAttributionService: AppsFlyerAttributionServicing {
         currentAttribution = model
     }
     
+    func handleLegacyDeepLink(_ data: [AnyHashable: Any]) {
+          print("📡 [AppsFlyerAttributionService] handleLegacyDeepLink вызван")
+          
+          // Нормализуем словарь (AnyHashable -> String)
+          let normalized = normalize(dictionary: data)
+          
+          // Парсим используя ту же логику, что и везде
+          let model = parseAttribution(from: normalized, source: "legacy_deeplink")
+          
+          // Обновляем текущую атрибуцию (это триггернет RootViewController)
+          currentAttribution = model
+      }
+    
     // MARK: - Parsing
     
     /// Нормализация словаря AnyHashable → String
