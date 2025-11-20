@@ -16,21 +16,48 @@ protocol DeviceIdsProviding {
 }
 
 
+import Foundation
+import AdSupport
+import AppTrackingTransparency
+import UIKit
+
 final class DeviceIdsProvider: DeviceIdsProviding {
 
     // MARK: - Public
 
     var idfa: String? {
-        let manager = ASIdentifierManager.shared()
-        let uuid = manager.advertisingIdentifier
+        // 1. Сначала проверяем статус разрешения (iOS 14+)
+        if #available(iOS 14, *) {
+            let status = ATTrackingManager.trackingAuthorizationStatus
+            
+            switch status {
+            case .authorized:
+                print("📱 [DeviceIdsProvider] ATT статус: Authorized")
+            case .denied:
+                print("📱 [DeviceIdsProvider] ATT статус: Denied")
+                return nil
+            case .notDetermined:
+                print("📱 [DeviceIdsProvider] ATT статус: Not Determined (еще не спросили)")
+                return nil
+            case .restricted:
+                print("📱 [DeviceIdsProvider] ATT статус: Restricted")
+                return nil
+            @unknown default:
+                return nil
+            }
+        }
+
+        // 2. Получаем сам ID
+        let uuid = ASIdentifierManager.shared().advertisingIdentifier
         let uuidString = uuid.uuidString
-        
-        // Проверка на нули и выключенный трекинг
-        if manager.isAdvertisingTrackingEnabled == false || uuidString == "00000000-0000-0000-0000-000000000000" {
-            print("📱 [DeviceIdsProvider] IDFA недоступен или скрыт")
+
+        // 3. Проверка на нули (Apple отдает нули, если трекинг запрещен)
+        if uuidString == "00000000-0000-0000-0000-000000000000" {
+            print("📱 [DeviceIdsProvider] IDFA равен нулям (система скрыла ID)")
             return nil
         }
-        print("📱 [DeviceIdsProvider] IDFA = \(uuidString)")
+
+        print("📱 [DeviceIdsProvider] IDFA получен: \(uuidString)")
         return uuidString
     }
 
@@ -43,7 +70,7 @@ final class DeviceIdsProvider: DeviceIdsProviding {
     /// Возвращаем числовой ID из конфига
     var appId: String {
         let id = AppConfig.appleAppID
-        print("📱 [DeviceIdsProvider] appId (numeric) = \(id)")
+        print("📱 [DeviceIdsProvider] appId = \(id)")
         return id
     }
 

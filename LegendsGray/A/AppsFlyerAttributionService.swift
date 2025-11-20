@@ -28,14 +28,14 @@ protocol AppsFlyerAttributionServicing {
 ///  - кэшируем
 ///  - оповещаем всех подписчиков
 final class AppsFlyerAttributionService: AppsFlyerAttributionServicing {
-
+    
     // MARK: - Singleton (для простоты)
-
+    
     /// Общий инстанс сервиса (можно потом заменить на DI, если понадобится)
     static let shared = AppsFlyerAttributionService()
-
+    
     // MARK: - Public
-
+    
     /// Последняя известная атрибуция
     private(set) var currentAttribution: AppsFlyerAttributionModel? {
         didSet {
@@ -44,74 +44,74 @@ final class AppsFlyerAttributionService: AppsFlyerAttributionServicing {
             }
         }
     }
-
+    
     // MARK: - Private
-
+    
     /// Список подписчиков на атрибуцию
     private var observers: [(AppsFlyerAttributionModel) -> Void] = []
-
+    
     // MARK: - Init
-
+    
     private init() {
         print("📡 [AppsFlyerAttributionService] Инициализирован")
     }
-
+    
     // MARK: - Observation
-
+    
     func observeAttribution(_ observer: @escaping (AppsFlyerAttributionModel) -> Void) {
         print("📡 [AppsFlyerAttributionService] Добавлен новый observer атрибуции")
         observers.append(observer)
-
+        
         // Если атрибуция уже есть — сразу отдадим её наблюдателю
         if let model = currentAttribution {
             print("📡 [AppsFlyerAttributionService] Сразу отдаём уже имеющуюся атрибуцию observer'у")
             observer(model)
         }
     }
-
+    
     private func notifyObservers(with model: AppsFlyerAttributionModel) {
         print("📡 [AppsFlyerAttributionService] Оповещение \(observers.count) observers об атрибуции")
         observers.forEach { $0(model) }
     }
-
+    
     // MARK: - Conversion Data
-
+    
     /// Обработка conversion data (первичная атрибуция установки)
     func handleConversionData(_ data: [AnyHashable: Any]) {
         print("📡 [AppsFlyerAttributionService] handleConversionData вызван")
         print("📡 [AppsFlyerAttributionService] Raw conversion data: \(data)")
-
+        
         // Приводим ключи к [String: Any]
         let normalized = normalize(dictionary: data)
-
+        
         // Парсим в модель
         let model = parseAttribution(from: normalized, source: "conversion_data")
-
+        
         currentAttribution = model
     }
-
+    
     // MARK: - Deep Link
-
+    
     /// Обработка результата диплинка
     func handleDeepLink(result: DeepLinkResult) {
         print("📡 [AppsFlyerAttributionService] handleDeepLink вызван")
         print("📡 [AppsFlyerAttributionService] DeepLinkResult status: \(result.status)")
         print("📡 [AppsFlyerAttributionService] DeepLinkResult error: \(String(describing: result.error))")
-
+        
         guard let deepLink = result.deepLink else {
             print("📡 [AppsFlyerAttributionService] DeepLinkResult.deepLink = nil, атрибуции нет")
             return
         }
-
+        
         let data = deepLink.clickEvent
         print("📡 [AppsFlyerAttributionService] DeepLink clickEvent: \(data)")
-
+        
         let model = parseAttribution(from: data, source: "deep_link")
         currentAttribution = model
     }
-
+    
     // MARK: - Parsing
-
+    
     /// Нормализация словаря AnyHashable → String
     private func normalize(dictionary: [AnyHashable: Any]) -> [String: Any] {
         var result: [String: Any] = [:]
@@ -124,21 +124,20 @@ final class AppsFlyerAttributionService: AppsFlyerAttributionServicing {
         }
         return result
     }
-
+    
+    /// Парсинг исходных данных (conversionData или deepLink) в нашу модель AppsFlyerAttributionModel
     /// Парсинг исходных данных (conversionData или deepLink) в нашу модель AppsFlyerAttributionModel
     private func parseAttribution(from data: [String: Any], source: String) -> AppsFlyerAttributionModel {
         print("📡 [AppsFlyerAttributionService] parseAttribution (source = \(source))")
-
+        
         // af_status: "Organic" / "Non-organic"
         let afStatus = data["af_status"] as? String
-
+        
         // Алиас кампании {key}
-        // ⚠️ ВАЖНО: откуда его брать — нужно уточнить у интегратора.
-        // Пока предположим, что это поле "campaign".
         let campaign = data["campaign"] as? String
-        let key = campaign   // временно считаем {key} = campaign
-
-        // Сабки (у AppsFlyer часто называются af_sub1...af_sub7)
+        let key = campaign
+        
+        // Сабки
         let sub1 = (data["af_sub1"] ?? data["sub1"]) as? String
         let sub2 = (data["af_sub2"] ?? data["sub2"]) as? String
         let sub3 = (data["af_sub3"] ?? data["sub3"]) as? String
@@ -146,13 +145,18 @@ final class AppsFlyerAttributionService: AppsFlyerAttributionServicing {
         let sub5 = (data["af_sub5"] ?? data["sub5"]) as? String
         let sub6 = (data["af_sub6"] ?? data["sub6"]) as? String
         let sub7 = (data["af_sub7"] ?? data["sub7"]) as? String
-
-        // AppsFlyer ID
-        let appsflyerId = data["af_user_id"] as? String ?? data["appsflyer_id"] as? String
-
-        // media_source (facebook / google / tiktok / и т.д.)
+        
+        // 🛠 ИСПРАВЛЕНИЕ ЗДЕСЬ:
+        // Сначала ищем ID в данных ответа. Если нет — берем напрямую у SDK.
+        var appsflyerId = data["af_user_id"] as? String ?? data["appsflyer_id"] as? String
+        
+        if appsflyerId == nil {
+            appsflyerId = AppsFlyerLib.shared().getAppsFlyerUID()
+            print("📡 [AppsFlyerAttributionService] В conversion_data не было ID, взяли напрямую из SDK: \(appsflyerId ?? "nil")")
+        }
+        
         let mediaSource = data["media_source"] as? String
-
+        
         // Заполняем модель
         let model = AppsFlyerAttributionModel(
             afStatus: afStatus,
@@ -169,8 +173,8 @@ final class AppsFlyerAttributionService: AppsFlyerAttributionServicing {
             campaign: campaign,
             rawData: data
         )
-
-        print("📡 [AppsFlyerAttributionService] Итоговая модель атрибуции собрана (source = \(source))")
+        
+        print("📡 [AppsFlyerAttributionService] Итоговая модель атрибуции собрана")
         return model
     }
 }
