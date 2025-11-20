@@ -118,13 +118,14 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate, WKUIDelegate, UI
 
 struct WebViewRepresentable: UIViewRepresentable {
     let url: URL
-    let customUserAgent: String?
+    
+    // Убрали хардкод, теперь берем из конфига или используем nil
+    let customUserAgent: String? = AppConfig.customUserAgent
 
     @Binding var canGoBack: Bool
     @Binding var canGoForward: Bool
     @Binding var webView: WKWebView?
 
-    // Позволяет прокинуть извне уже созданный координатор (обычно не нужен)
     var externalCoordinator: WebViewCoordinator?
 
     func makeCoordinator() -> WebViewCoordinator {
@@ -132,7 +133,7 @@ struct WebViewRepresentable: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> WKWebView {
-        print("🌐 [WebView] Загружаем URL: \(url.absoluteString)")
+        print("🌐 [WebView] Загрузка: \(url.absoluteString)")
 
         let prefs = WKPreferences()
         prefs.javaScriptCanOpenWindowsAutomatically = true
@@ -141,18 +142,25 @@ struct WebViewRepresentable: UIViewRepresentable {
         cfg.defaultWebpagePreferences.allowsContentJavaScript = true
         cfg.allowsInlineMediaPlayback = true
         cfg.preferences = prefs
-        cfg.applicationNameForUserAgent = "Version/17.2 Mobile/15E148 Safari/604.1"
+        
+        // Устанавливаем UserAgent только если он задан в AppConfig
+        if let ua = customUserAgent {
+            cfg.applicationNameForUserAgent = ua
+        }
 
         let wk = WKWebView(frame: .zero, configuration: cfg)
         wk.allowsBackForwardNavigationGestures = true
         wk.scrollView.delegate = context.coordinator
         wk.navigationDelegate = context.coordinator
         wk.uiDelegate = context.coordinator
-        if let ua = customUserAgent { wk.customUserAgent = ua }
+        
+        // Дополнительная установка UA (иногда applicationNameForUserAgent мало)
+        if let ua = customUserAgent {
+            wk.customUserAgent = ua
+        }
 
         wk.load(URLRequest(url: url))
 
-        // Инициализируем стек
         context.coordinator.webViewStack = [wk]
         DispatchQueue.main.async { webView = wk }
         return wk
@@ -160,7 +168,6 @@ struct WebViewRepresentable: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) { }
 }
-
 // MARK: - Public SwiftUI view
 
 struct CustomWebView: View {
@@ -179,11 +186,11 @@ struct CustomWebView: View {
             VStack(spacing: 0) {
                 WebViewRepresentable(
                             url: url,
-                            customUserAgent: customUserAgent,
                             canGoBack: $canGoBack,
                             canGoForward: $canGoForward,
                             webView: $innerWebView
                         )
+                
 
                 // Панель навигации
                 HStack {

@@ -26,6 +26,7 @@
 		64697ACC2ECC96DB002BC16D /* LinkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697ACB2ECC96DB002BC16D /* LinkBuilder.swift */; };
 		64697ACE2ECC96E4002BC16D /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697ACD2ECC96E4002BC16D /* WebViewController.swift */; };
 		64697AD02ECC96EA002BC16D /* StartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697ACF2ECC96EA002BC16D /* StartView.swift */; };
+		648FB2102ECF52B200DF9702 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 648FB20F2ECF52B200DF9702 /* AppConfig.swift */; };
 		64F73ACE2ECE4B1F00F7A44A /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F73ACD2ECE4B1F00F7A44A /* AppLogger.swift */; };
 		64F73AD02ECE4B2F00F7A44A /* LogsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F73ACF2ECE4B2F00F7A44A /* LogsViewController.swift */; };
 		64F73AD22ECE4D0300F7A44A /* ConsoleCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F73AD12ECE4D0300F7A44A /* ConsoleCapture.swift */; };
@@ -50,6 +51,7 @@
 		64697ACB2ECC96DB002BC16D /* LinkBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkBuilder.swift; sourceTree = "<group>"; };
 		64697ACD2ECC96E4002BC16D /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
 		64697ACF2ECC96EA002BC16D /* StartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartView.swift; sourceTree = "<group>"; };
+		648FB20F2ECF52B200DF9702 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		64F73ACD2ECE4B1F00F7A44A /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		64F73ACF2ECE4B2F00F7A44A /* LogsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogsViewController.swift; sourceTree = "<group>"; };
 		64F73AD12ECE4D0300F7A44A /* ConsoleCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleCapture.swift; sourceTree = "<group>"; };
@@ -105,6 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				64697AAC2ECC94C7002BC16D /* AppDelegate.swift */,
+				648FB20F2ECF52B200DF9702 /* AppConfig.swift */,
 				64697AB32ECC94C7002BC16D /* SceneDelegate.swift */,
 				64697AB42ECC94C7002BC16D /* ViewController.swift */,
 				64697ABF2ECC94FE002BC16D /* AppsFlyerAttributionService.swift */,
@@ -221,6 +224,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				64697AC02ECC94FE002BC16D /* AppsFlyerAttributionService.swift in Sources */,
+				648FB2102ECF52B200DF9702 /* AppConfig.swift in Sources */,
 				64697ACE2ECC96E4002BC16D /* WebViewController.swift in Sources */,
 				64697ABA2ECC94C7002BC16D /* AppDelegate.swift in Sources */,
 				64F73ACE2ECE4B1F00F7A44A /* AppLogger.swift in Sources */,
@@ -282,7 +286,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.legendsserviceapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -318,7 +322,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.legendsserviceapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
