@@ -38,26 +38,46 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        requestATTIfNeeded()
-    }
-
-    private func requestATTIfNeeded() {
-        guard #available(iOS 14, *) else {
-            // Для старых iOS сразу просим пуши (если нужно)
-            return
+            requestATTIfNeeded()
         }
-        guard attRequested == false else { return }
-        attRequested = true
 
-        print("🔐 [ATT] Запрос разрешения...")
+        private func requestATTIfNeeded() {
+            // Если iOS старая (< 14), сразу просим пуши
+            guard #available(iOS 14, *) else {
+                requestPushPermissionIfNeeded()
+                return
+            }
+            
+            // Если уже спрашивали ATT — выходим
+            guard attRequested == false else { return }
+            attRequested = true
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            ATTrackingManager.requestTrackingAuthorization { status in
-                print("🔐 [ATT] Статус: \(status.rawValue)")
-                // После ATT можно инициализировать что-то ещё, если нужно
+            print("🔐 [ATT] Запрос разрешения...")
+
+            // Даем небольшую задержку, чтобы интерфейс успел прогрузиться
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                ATTrackingManager.requestTrackingAuthorization { status in
+                    print("🔐 [ATT] Статус: \(status.rawValue)")
+                    
+                    // ВАЖНО: Как только юзер выбрал (или система ответила) по ATT,
+                    // сразу запрашиваем разрешение на ПУШИ.
+                    DispatchQueue.main.async {
+                        self.requestPushPermissionIfNeeded()
+                    }
+                }
             }
         }
-    }
+
+        /// Метод для запроса пушей через OneSignal
+        private func requestPushPermissionIfNeeded() {
+            print("🔔 [Push] Запрос системного разрешения...")
+            
+            // OneSignal сам проверит, спрашивали мы уже или нет.
+            // Если нет — покажет системный алерт.
+            OneSignal.Notifications.requestPermission({ accepted in
+                print("🔔 [Push] Пользователь ответил: \(accepted)")
+            }, fallbackToSettings: true)
+        }
 
     // MARK: - Setup Methods
 
