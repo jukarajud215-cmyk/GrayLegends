@@ -98,6 +98,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         appsFlyer.appleAppID      = AppConfig.appleAppID
         appsFlyer.delegate        = self
         appsFlyer.isDebug         = true // ⚠️ Выключить перед релизом, если логов слишком много
+        appsFlyer.resolveDeepLinkURLs = ["test134.onelink.me"]
+
         
         appsFlyer.start()
     }
@@ -110,7 +112,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-// MARK: - AppsFlyer Delegate (без изменений логики, просто для полноты)
 extension AppDelegate: AppsFlyerLibDelegate {
     func onConversionDataSuccess(_ conversionInfo: [AnyHashable : Any]) {
         print("📡 [AppsFlyer] onConversionDataSuccess")
@@ -121,9 +122,27 @@ extension AppDelegate: AppsFlyerLibDelegate {
         print("❌ [AppsFlyer] onConversionDataFail: \(error.localizedDescription)")
     }
     
+    // Новый метод (UDL)
     func onDeepLinking(_ result: DeepLinkResult) {
-        print("📡 [AppsFlyer] onDeepLinking")
+        print("📡 [AppsFlyer] onDeepLinking вызван. Status: \(result.status.rawValue)")
+        
+        if result.status == .failure {
+            print("❌ [AppsFlyer] DeepLink error: \(result.error?.localizedDescription ?? "nil")")
+            return
+        }
+        
         AppsFlyerAttributionService.shared.handleDeepLink(result: result)
+    }
+    
+    // 🚨 ДОБАВЬ ВОТ ЭТИ ДВА МЕТОДА (Legacy):
+    // Если onDeepLinking не сработает, может сработать этот
+    func onAppOpenAttribution(_ attributionData: [AnyHashable : Any]) {
+        print("📡 [AppsFlyer] (Legacy) onAppOpenAttribution: \(attributionData)")
+        // Можно тоже попробовать обработать, но пока просто посмотрим лог
+    }
+
+    func onAppOpenAttributionFailure(_ error: Error) {
+        print("❌ [AppsFlyer] (Legacy) onAppOpenAttributionFailure: \(error.localizedDescription)")
     }
 }
 
