@@ -69,10 +69,21 @@ final class AppsFlyerAttributionService: AppsFlyerAttributionServicing {
         }
     }
     
+//    private func notifyObservers(with model: AppsFlyerAttributionModel) {
+//        print("📡 [AppsFlyerAttributionService] Оповещение \(observers.count) observers об атрибуции")
+//        observers.forEach { $0(model) }
+//    }
+    
     private func notifyObservers(with model: AppsFlyerAttributionModel) {
-        print("📡 [AppsFlyerAttributionService] Оповещение \(observers.count) observers об атрибуции")
-        observers.forEach { $0(model) }
-    }
+            print("📡 [AppsFlyerAttributionService] Оповещение \(observers.count) observers об атрибуции")
+            
+            // 🚨 ВАЖНЫЙ ФИКС:
+            // AppsFlyer работает в фоне, а UI (RootVC) нужно обновлять в Main потоке.
+            // Оборачиваем уведомление в main.async:
+            DispatchQueue.main.async {
+                self.observers.forEach { $0(model) }
+            }
+        }
     
     // MARK: - Conversion Data
     
