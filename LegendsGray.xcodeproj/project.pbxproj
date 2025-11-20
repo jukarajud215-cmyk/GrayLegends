@@ -15,7 +15,6 @@
 		64697AB82ECC94C7002BC16D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 64697AB02ECC94C7002BC16D /* LaunchScreen.storyboard */; };
 		64697AB92ECC94C7002BC16D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 64697AB22ECC94C7002BC16D /* Main.storyboard */; };
 		64697ABA2ECC94C7002BC16D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697AAC2ECC94C7002BC16D /* AppDelegate.swift */; };
-		64697ABB2ECC94C7002BC16D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697AB32ECC94C7002BC16D /* SceneDelegate.swift */; };
 		64697ABC2ECC94C7002BC16D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697AB42ECC94C7002BC16D /* ViewController.swift */; };
 		64697AC02ECC94FE002BC16D /* AppsFlyerAttributionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697ABF2ECC94FE002BC16D /* AppsFlyerAttributionService.swift */; };
 		64697AC22ECC96BD002BC16D /* DeviceIdsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64697AC12ECC96BD002BC16D /* DeviceIdsProvider.swift */; };
@@ -40,7 +39,6 @@
 		64697AAE2ECC94C7002BC16D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64697AAF2ECC94C7002BC16D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		64697AB12ECC94C7002BC16D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		64697AB32ECC94C7002BC16D /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		64697AB42ECC94C7002BC16D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		64697ABF2ECC94FE002BC16D /* AppsFlyerAttributionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppsFlyerAttributionService.swift; sourceTree = "<group>"; };
 		64697AC12ECC96BD002BC16D /* DeviceIdsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdsProvider.swift; sourceTree = "<group>"; };
@@ -108,7 +106,6 @@
 			children = (
 				64697AAC2ECC94C7002BC16D /* AppDelegate.swift */,
 				648FB20F2ECF52B200DF9702 /* AppConfig.swift */,
-				64697AB32ECC94C7002BC16D /* SceneDelegate.swift */,
 				64697AB42ECC94C7002BC16D /* ViewController.swift */,
 				64697ABF2ECC94FE002BC16D /* AppsFlyerAttributionService.swift */,
 				64697AC32ECC96C4002BC16D /* AppsFlyerAttributionModel.swift */,
@@ -230,7 +227,6 @@
 				64F73ACE2ECE4B1F00F7A44A /* AppLogger.swift in Sources */,
 				64697AD02ECC96EA002BC16D /* StartView.swift in Sources */,
 				64697ACA2ECC96D6002BC16D /* TrackingParams.swift in Sources */,
-				64697ABB2ECC94C7002BC16D /* SceneDelegate.swift in Sources */,
 				64697AC62ECC96CA002BC16D /* FlagsmithService.swift in Sources */,
 				64697ACC2ECC96DB002BC16D /* LinkBuilder.swift in Sources */,
 				64F73AD22ECE4D0300F7A44A /* ConsoleCapture.swift in Sources */,
@@ -286,7 +282,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 8.0;
+				MARKETING_VERSION = 9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.legendsserviceapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -322,7 +318,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 8.0;
+				MARKETING_VERSION = 9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.legendsserviceapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
