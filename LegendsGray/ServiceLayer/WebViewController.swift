@@ -266,9 +266,26 @@ struct CustomWebView: View {
 }
 
 
+//final class WebViewController: UIHostingController<CustomWebView> {
+//
+//    init(url: URL) {
+//        let rootView = CustomWebView(url: url)
+//        super.init(rootView: rootView)
+//        print("🌐 [WebViewController] Инициализирован с URL: \(url.absoluteString)")
+//    }
+//
+//    @objc required dynamic init?(coder aDecoder: NSCoder) {
+//        fatalError("init(coder:) не поддерживается")
+//    }
+//}
+
 final class WebViewController: UIHostingController<CustomWebView> {
+    
+    // Добавили публичное свойство, чтобы читать его снаружи
+    let initialURL: URL
 
     init(url: URL) {
+        self.initialURL = url // Сохранили
         let rootView = CustomWebView(url: url)
         super.init(rootView: rootView)
         print("🌐 [WebViewController] Инициализирован с URL: \(url.absoluteString)")

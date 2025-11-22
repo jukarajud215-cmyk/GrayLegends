@@ -1,11 +1,10 @@
-//
-//
+
+
 //
 //import UIKit
 //import SwiftUI
 //
-///// RootViewController — корневой контроллер,
-///// который решает, что открыть и умеет ПЕРЕЗАГРУЖАТЬСЯ при диплинке.
+///// RootViewController — корневой контроллер с поддержкой "памяти" о статусе юзера.
 //final class RootViewController: UIViewController {
 //
 //    // MARK: - Dependencies
@@ -17,13 +16,8 @@
 //
 //    // MARK: - State
 //
-//    /// Флаг, что мы уже один раз успешно загрузились
 //    private var flowStarted = false
-//
-//    /// Текущая атрибуция
 //    private var currentAttribution: AppsFlyerAttributionModel?
-//    
-//    /// Сохраненные ссылки (чтобы не качать их заново при диплинке)
 //    private var cachedOfferLinks: OfferLinks?
 //
 //    // MARK: - Init
@@ -57,10 +51,10 @@
 //        setupInitialLoadingState()
 //        observeAttribution()
 //
-//        // Таймаут на случай, если AF молчит (только для первого запуска)
+//        // Таймаут
 //        DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
 //            if !self.flowStarted {
-//                print("⏳ [RootViewController] Таймаут 6 сек → запускаем флоу (Organic fallback)")
+//                print("⏳ [RootViewController] Таймаут 6 сек → запускаем флоу")
 //                self.startFlowIfNeeded()
 //            }
 //        }
@@ -69,9 +63,7 @@
 //    // MARK: - UI
 //
 //    private func setupInitialLoadingState() {
-//        // Очищаем старое (если есть)
 //        view.subviews.forEach { $0.removeFromSuperview() }
-//        
 //        let label = UILabel()
 //        label.text = "Loading..."
 //        label.font = .systemFont(ofSize: 16, weight: .medium)
@@ -87,20 +79,22 @@
 //    // MARK: - Logic
 //
 //    private func observeAttribution() {
-//        print("🔍 [RootViewController] Подписка на атрибуцию")
-//
 //        attributionService.observeAttribution { [weak self] model in
 //            guard let self else { return }
-//            print("🧱 [RootViewController] Получена атрибуция: \(model.afStatus ?? "nil") | DeepLink: \(model.sub1 ?? "nil")")
+//            print("🧱 [RootViewController] Получена атрибуция: \(model.afStatus ?? "nil")")
 //            
 //            self.currentAttribution = model
 //            
+//            // Если пришли данные Non-organic (или сабки), запоминаем это навсегда
+//            if self.isConsideredNonOrganic(model) {
+//                print("💾 [RootViewController] Юзер определен как Non-organic. Сохраняем статус.")
+//                UserStatusService.shared.isNonOrganicUser = true
+//            }
+//            
 //            if self.flowStarted {
-//                // 🚨 ВАЖНО: Если мы уже работаем, но пришли новые данные (DeepLink)
-//                print("🔄 [RootViewController] Пришли НОВЫЕ данные во время работы. Перезапускаем ссылку!")
+//                print("🔄 [RootViewController] Обновление данных (Hot Reload)")
 //                self.handleDeepLinkUpdate()
 //            } else {
-//                // Первый запуск
 //                self.startFlowIfNeeded()
 //            }
 //        }
@@ -109,18 +103,13 @@
 //    private func startFlowIfNeeded() {
 //        guard flowStarted == false else { return }
 //        flowStarted = true
-//        print("🧱 [RootViewController] Старт основного флоу")
-//
-//        // 1. Качаем ссылки из Flagsmith
 //        fetchOfferLinks()
 //    }
 //    
 //    private func handleDeepLinkUpdate() {
-//        // Если ссылки уже скачаны, просто пересобираем финальный URL
 //        if let links = cachedOfferLinks {
 //            handleOfferLinks(links)
 //        } else {
-//            // Если вдруг ссылок нет (редкость), качаем заново
 //            fetchOfferLinks()
 //        }
 //    }
@@ -131,58 +120,69 @@
 //            guard let self else { return }
 //            
 //            if let links {
-//                self.cachedOfferLinks = links // Сохраняем в кэш
+//                self.cachedOfferLinks = links
 //                self.handleOfferLinks(links)
 //            } else {
-//                print("❌ [RootViewController] Flagsmith вернул nil. Открываем заглушку.")
+//                print("❌ [RootViewController] Flagsmith error. Заглушка.")
 //                self.openAppPlaceholder()
 //            }
 //        }
 //    }
 //
 //    private func handleOfferLinks(_ links: OfferLinks) {
-//        print("🌐 [RootViewController] Обработка ссылок...")
-//
-//        // 2. Определяем статус (при DeepLink'е мы считаем это как Non-organic)
-//        // Если есть sub1 или sub2 — считаем это рекламным входом
-//        let isDeepLink = currentAttribution?.sub1 != nil || currentAttribution?.sub2 != nil
-//        let afStatus = isDeepLink ? "Non-organic" : currentAttribution?.afStatus
+//        // 1. Определяем финальный статус
+//        // Смотрим и на текущую атрибуцию, и на сохраненную "память"
+//        let isSavedNonOrganic = UserStatusService.shared.isNonOrganicUser
+//        let isCurrentNonOrganic = isConsideredNonOrganic(currentAttribution)
 //        
-//        print("🌐 [RootViewController] Итоговый статус для ссылки: \(afStatus ?? "nil")")
+//        // Если юзер хоть раз был paid — он навсегда paid
+//        let isPaid = isSavedNonOrganic || isCurrentNonOrganic
+//        let afStatus = isPaid ? "Non-organic" : "Organic"
+//        
+//        print("🌐 [RootViewController] Статус юзера: \(afStatus) (Saved: \(isSavedNonOrganic), Current: \(isCurrentNonOrganic))")
 //
-//        // 3. Выбираем baseURL
-//        guard let baseURL = chooseBaseURL(from: links, afStatus: afStatus) else {
+//        // 2. Выбираем baseURL
+//        guard let baseURL = chooseBaseURL(from: links, isPaid: isPaid) else {
 //            self.openAppPlaceholder()
 //            return
 //        }
 //
-//        // 4. Собираем параметры
+//        // 3. Собираем параметры (всегда берем свежие из AppsFlyer, если они есть)
 //        let trackingParams = buildTrackingParams(afStatus: afStatus)
 //
-//        // 5. LinkBuilder
+//        // 4. Строим ссылку
 //        guard let finalURL = linkBuilder.buildLink(baseURL: baseURL, params: trackingParams) else {
 //            self.openAppPlaceholder()
 //            return
 //        }
 //
-//        // 6. Открываем WebView (перезагружаем экран)
+//        // 5. Открываем
 //        openWebView(with: finalURL)
 //    }
 //
 //    // MARK: - Helpers
-//
-//    private func chooseBaseURL(from links: OfferLinks, afStatus: String?) -> URL? {
-//        let normalizedStatus = afStatus?.lowercased()
+//    
+//    /// Проверка, считать ли текущую модель "Рекламной"
+//    private func isConsideredNonOrganic(_ model: AppsFlyerAttributionModel?) -> Bool {
+//        guard let model else { return false }
 //        
-//        // Логика выбора
-//        if normalizedStatus == "organic" {
-//            return links.organicURL ?? links.fallbackURL
-//        } else if let normalizedStatus {
-//            return links.paidURL ?? links.fallbackURL
+//        // 1. Явный статус
+//        if let status = model.afStatus?.lowercased(), status == "non-organic" {
+//            return true
 //        }
-//        
-//        // Fallback logic
-//        return links.fallbackURL ?? links.organicURL ?? links.paidURL
+//        // 2. Наличие сабок (Диплинк)
+//        if model.sub1 != nil || model.sub2 != nil {
+//            return true
+//        }
+//        return false
+//    }
+//
+//    private func chooseBaseURL(from links: OfferLinks, isPaid: Bool) -> URL? {
+//        if isPaid {
+//            return links.paidURL ?? links.fallbackURL
+//        } else {
+//            return links.organicURL ?? links.fallbackURL
+//        }
 //    }
 //
 //    private func buildTrackingParams(afStatus: String?) -> TrackingParams {
@@ -204,13 +204,8 @@
 //        )
 //    }
 //
-//    // MARK: - Navigation
-//
 //    private func openWebView(with url: URL) {
 //        print("🌐 [RootViewController] ОТКРЫВАЕМ WebView: \(url.absoluteString)")
-//        
-//        // Проверяем, не открыт ли уже WebView. Если открыт — можем просто заменить.
-//        // Для надежности пересоздаем контроллер.
 //        let webVC = WebViewController(url: url)
 //        replaceRoot(with: webVC)
 //    }
@@ -224,8 +219,6 @@
 //
 //    private func replaceRoot(with viewController: UIViewController) {
 //        guard let window = UIApplication.shared.windows.first else { return }
-//        
-//        // Анимация перехода, чтобы не моргало
 //        UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
 //            window.rootViewController = viewController
 //        }, completion: nil)
@@ -236,7 +229,8 @@
 import UIKit
 import SwiftUI
 
-/// RootViewController — корневой контроллер с поддержкой "памяти" о статусе юзера.
+/// RootViewController — Вечный контейнер.
+/// Он никогда не исчезает, а просто меняет контент внутри себя.
 final class RootViewController: UIViewController {
 
     // MARK: - Dependencies
@@ -251,6 +245,9 @@ final class RootViewController: UIViewController {
     private var flowStarted = false
     private var currentAttribution: AppsFlyerAttributionModel?
     private var cachedOfferLinks: OfferLinks?
+    
+    /// Ссылка на текущий показанный контроллер (WebView или StartView)
+    private var currentChildViewController: UIViewController?
 
     // MARK: - Init
 
@@ -266,7 +263,7 @@ final class RootViewController: UIViewController {
         self.linkBuilder = linkBuilder
 
         super.init(nibName: nil, bundle: nil)
-        print("🧱 [RootViewController] Инициализирован")
+        print("🧱 [RootViewController] Инициализирован (Container Mode)")
     }
 
     required init?(coder: NSCoder) {
@@ -278,9 +275,11 @@ final class RootViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        print("🧱 [RootViewController] viewDidLoad")
-
+        
+        // Показываем лоадер, пока ждем решения
         setupInitialLoadingState()
+        
+        // Подписываемся
         observeAttribution()
 
         // Таймаут
@@ -292,20 +291,27 @@ final class RootViewController: UIViewController {
         }
     }
     
-    // MARK: - UI
+    // MARK: - UI Setup
 
     private func setupInitialLoadingState() {
-        view.subviews.forEach { $0.removeFromSuperview() }
+        // Если уже есть ребенок - не рисуем лоадер поверх
+        if currentChildViewController != nil { return }
+        
         let label = UILabel()
         label.text = "Loading..."
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = .secondaryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.tag = 999 // Метка, чтобы потом удалить
         view.addSubview(label)
         NSLayoutConstraint.activate([
             label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+    }
+    
+    private func removeLoadingState() {
+        view.viewWithTag(999)?.removeFromSuperview()
     }
 
     // MARK: - Logic
@@ -317,14 +323,13 @@ final class RootViewController: UIViewController {
             
             self.currentAttribution = model
             
-            // Если пришли данные Non-organic (или сабки), запоминаем это навсегда
             if self.isConsideredNonOrganic(model) {
-                print("💾 [RootViewController] Юзер определен как Non-organic. Сохраняем статус.")
+                print("💾 [RootViewController] Юзер Non-organic. Сохраняем статус.")
                 UserStatusService.shared.isNonOrganicUser = true
             }
             
             if self.flowStarted {
-                print("🔄 [RootViewController] Обновление данных (Hot Reload)")
+                print("🔄 [RootViewController] Hot Reload: Пришли новые данные!")
                 self.handleDeepLinkUpdate()
             } else {
                 self.startFlowIfNeeded()
@@ -362,50 +367,37 @@ final class RootViewController: UIViewController {
     }
 
     private func handleOfferLinks(_ links: OfferLinks) {
-        // 1. Определяем финальный статус
-        // Смотрим и на текущую атрибуцию, и на сохраненную "память"
+        // Логика статуса
         let isSavedNonOrganic = UserStatusService.shared.isNonOrganicUser
         let isCurrentNonOrganic = isConsideredNonOrganic(currentAttribution)
-        
-        // Если юзер хоть раз был paid — он навсегда paid
         let isPaid = isSavedNonOrganic || isCurrentNonOrganic
         let afStatus = isPaid ? "Non-organic" : "Organic"
         
-        print("🌐 [RootViewController] Статус юзера: \(afStatus) (Saved: \(isSavedNonOrganic), Current: \(isCurrentNonOrganic))")
+        print("🌐 [RootViewController] Решение: \(afStatus)")
 
-        // 2. Выбираем baseURL
+        // Выбор URL
         guard let baseURL = chooseBaseURL(from: links, isPaid: isPaid) else {
             self.openAppPlaceholder()
             return
         }
 
-        // 3. Собираем параметры (всегда берем свежие из AppsFlyer, если они есть)
+        // Сборка параметров
         let trackingParams = buildTrackingParams(afStatus: afStatus)
-
-        // 4. Строим ссылку
         guard let finalURL = linkBuilder.buildLink(baseURL: baseURL, params: trackingParams) else {
             self.openAppPlaceholder()
             return
         }
 
-        // 5. Открываем
+        // Показ
         openWebView(with: finalURL)
     }
 
-    // MARK: - Helpers
+    // MARK: - Helpers (Logic)
     
-    /// Проверка, считать ли текущую модель "Рекламной"
     private func isConsideredNonOrganic(_ model: AppsFlyerAttributionModel?) -> Bool {
         guard let model else { return false }
-        
-        // 1. Явный статус
-        if let status = model.afStatus?.lowercased(), status == "non-organic" {
-            return true
-        }
-        // 2. Наличие сабок (Диплинк)
-        if model.sub1 != nil || model.sub2 != nil {
-            return true
-        }
+        if let status = model.afStatus?.lowercased(), status == "non-organic" { return true }
+        if model.sub1 != nil || model.sub2 != nil { return true }
         return false
     }
 
@@ -436,23 +428,53 @@ final class RootViewController: UIViewController {
         )
     }
 
+    // MARK: - Navigation (Container Logic) ⚠️ CHANGED
+
     private func openWebView(with url: URL) {
-        print("🌐 [RootViewController] ОТКРЫВАЕМ WebView: \(url.absoluteString)")
+        print("🌐 [RootViewController] Переход на WebView: \(url.absoluteString)")
+        
+        // Если мы уже показываем WebView с ТАКОЙ ЖЕ ссылкой — не дергаемся
+        // (Чтобы избежать бесконечных перезагрузок, если AF шлет апдейты)
+        if let currentWeb = currentChildViewController as? WebViewController,
+           currentWeb.initialURL == url { // Тут придется добавить св-во initialURL в WebVC, см. ниже
+             print("🌐 [RootViewController] Эта ссылка уже открыта. Игнорируем.")
+             return
+        }
+        
         let webVC = WebViewController(url: url)
-        replaceRoot(with: webVC)
+        transition(to: webVC)
     }
 
     private func openAppPlaceholder() {
-        print("🧱 [RootViewController] Заглушка")
+        print("🧱 [RootViewController] Переход на Заглушку")
+        
+        // Если заглушка уже открыта — не пересоздаем
+        if currentChildViewController is UIHostingController<StartView> { return }
+        
         let swiftUIView = StartView()
         let hosting = UIHostingController(rootView: swiftUIView)
-        replaceRoot(with: hosting)
+        transition(to: hosting)
     }
-
-    private func replaceRoot(with viewController: UIViewController) {
-        guard let window = UIApplication.shared.windows.first else { return }
-        UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
-            window.rootViewController = viewController
-        }, completion: nil)
+    
+    /// Главный метод смены экранов
+    private func transition(to newVC: UIViewController) {
+        // 1. Удаляем старый (если был)
+        if let current = currentChildViewController {
+            current.willMove(toParent: nil)
+            current.view.removeFromSuperview()
+            current.removeFromParent()
+        }
+        
+        // 2. Убираем лоадер
+        removeLoadingState()
+        
+        // 3. Добавляем новый как Child
+        addChild(newVC)
+        newVC.view.frame = view.bounds
+        newVC.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(newVC.view)
+        newVC.didMove(toParent: self)
+        
+        currentChildViewController = newVC
     }
 }
