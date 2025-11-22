@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LogsView: View {
-
+    
     @ObservedObject private var logger = AppLogger.shared
     @Environment(\.dismiss) private var dismiss
     @State private var searchText: String = ""
@@ -17,7 +17,7 @@ struct LogsView: View {
     }
     
     @State private var selectedFilter: LogFilter = .all
-
+    
     /// Вычисляем строки в реальном времени на основе чипа и поиска
     private var filteredLines: [String] {
         let all = logger.lines
@@ -33,9 +33,9 @@ struct LogsView: View {
             categoryFiltered = all.filter { line in
                 let l = line.lowercased()
                 return l.contains("appsflyer") || line.contains("📡") ||
-                       l.contains("webview") || line.contains("🌐") ||
-                       l.contains("linkbuilder") || line.contains("🔗") ||
-                       l.contains("offerlinks")
+                l.contains("webview") || line.contains("🌐") ||
+                l.contains("linkbuilder") || line.contains("🔗") ||
+                l.contains("offerlinks")
             }
             
         case .af:
@@ -52,7 +52,7 @@ struct LogsView: View {
         guard !searchText.isEmpty else { return categoryFiltered }
         return categoryFiltered.filter { $0.lowercased().contains(searchText.lowercased()) }
     }
-
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -78,7 +78,7 @@ struct LogsView: View {
                     .padding(.vertical, 10)
                 }
                 .background(Color.black)
-
+                
                 // Поле поиска
                 HStack {
                     Image(systemName: "magnifyingglass")
@@ -92,7 +92,7 @@ struct LogsView: View {
                 .cornerRadius(10)
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
-
+                
                 // Список логов
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 4) {
@@ -130,6 +130,14 @@ struct LogsView: View {
                 // Группа кнопок (справа)
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     // 🆕 Кнопка Копировать (копирует только отфильтрованное)
+                    
+                    Button {
+                        resetUserCache()
+                    } label: {
+                        Image(systemName: "xmark.bin") // Иконка мусорки/очистки
+                            .foregroundColor(.orange)
+                    }
+                    
                     Button {
                         copyFilteredLogs()
                     } label: {
@@ -150,6 +158,18 @@ struct LogsView: View {
     }
     
     // MARK: - Helpers
+    
+    private func resetUserCache() {
+        // Сбрасываем статус
+        UserStatusService.shared.reset()
+        
+        // Добавляем лог, чтобы было видно
+        AppLogger.shared.appendRawLine("🧹 [TEST] Статус юзера сброшен! Перезапустите приложение.")
+        
+        // Небольшая вибрация
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+    }
     
     /// Копирует в буфер обмена ТОЛЬКО то, что сейчас видно на экране (Filtered)
     private func copyFilteredLogs() {

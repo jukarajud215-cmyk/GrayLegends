@@ -178,6 +178,7 @@ struct CustomWebView: View {
     @State private var canGoForward = false
     @State private var innerWebView: WKWebView?
     @State private var showLogs = false
+    @State private var counter = 0
 
     var body: some View {
         ZStack {
@@ -218,6 +219,7 @@ struct CustomWebView: View {
                         if let coord = (innerWebView?.navigationDelegate as? WebViewCoordinator) {
                             coord.webViewStack.last?.goForward()
                         }
+                        
                     } label: {
                         Image(systemName: "chevron.right")
                             .foregroundStyle(canGoForward ? .white : .gray)
@@ -228,7 +230,16 @@ struct CustomWebView: View {
                     .padding(.top, 12)
                 }
                 .frame(height: 20)
-                .background(Color.black)
+                .background {
+                    Color.black
+                        .onTapGesture {
+                            counter += 1
+                            if counter >= 15 {
+                                counter = 0
+                                showLogs.toggle()
+                            }
+                        }
+                }
                 .ignoresSafeArea(edges: .bottom)
             }
         }
